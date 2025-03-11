@@ -7,8 +7,6 @@ A simple 3D racing game built with Three.js.
 ## Features
 
 - 3D car model with basic physics
-- Oval race track
-- Lap tracking and timing
 - Speed display
 - Camera that follows the car
 
