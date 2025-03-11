@@ -31,7 +31,7 @@ class RacingGame {
             jumpForce: 15,
             gravity: 30,
             jumpCooldown: 0,
-            jumpCooldownTime: 0.3,
+            jumpCooldownTime: 0.2, // Reduced cooldown for more responsive auto-jumping
             consecutiveJumps: 0,
             maxConsecutiveJumps: 10, // Increased max consecutive jumps
             speedBoostPerJump: 5 // Increased speed boost per jump
@@ -364,11 +364,24 @@ class RacingGame {
                     const speedBoost = this.gameState.speedBoostPerJump * (this.gameState.consecutiveJumps - 1);
                     const speedDirection = this.gameState.speed > 0 ? 1 : -1;
                     this.gameState.speed += speedBoost * speedDirection;
+                    
+                    // Add a visual bounce effect for successful bunnyhopping
+                    if (this.gameState.consecutiveJumps > 2) {
+                        this.gameState.jumpForce = 15 + (this.gameState.consecutiveJumps - 2); // Slightly higher jumps for consecutive hops
+                    }
                 }
+            } else {
+                // Reset consecutive jumps if not moving fast enough
+                this.gameState.consecutiveJumps = 0;
             }
             
             // Apply jump cooldown
             this.gameState.jumpCooldown = this.gameState.jumpCooldownTime;
+            
+            // Reset jump force to default after applying
+            setTimeout(() => {
+                this.gameState.jumpForce = 15;
+            }, 50);
         }
     }
     
@@ -411,6 +424,11 @@ class RacingGame {
         // Update jump cooldown
         if (this.gameState.jumpCooldown > 0) {
             this.gameState.jumpCooldown -= deltaTime;
+        }
+        
+        // Auto-jump if space is held down and we're ready to jump
+        if (this.inputState.jump && !this.gameState.isJumping && this.gameState.jumpCooldown <= 0) {
+            this.tryJump();
         }
         
         // Handle jumping and gravity
