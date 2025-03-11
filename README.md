@@ -1,87 +1,49 @@
-# Trackmania Clone
+# Three.js Racing Game
 
-A Trackmania-inspired racing game built with Three.js and Cannon.js physics.
-
-![Trackmania Clone Screenshot](screenshot.png)
-(Screenshot will be available after running the game)
+A simple 3D racing game built with Three.js.
 
 ## Features
 
-- 3D racing game with realistic physics
-- Car controls with acceleration, braking, and steering
-- Custom track with various elements:
-  - Straights
-  - Corners
-  - Ramps
-  - Elevated sections
-  - Loops
-- Timer and speedometer
-- Start/finish line
+- 3D car model with basic physics
+- Oval race track
+- Lap tracking and timing
+- Speed display
+- Camera that follows the car
 
 ## Controls
 
-- **W / Up Arrow**: Accelerate
-- **S / Down Arrow**: Brake/Reverse
-- **A / Left Arrow**: Steer Left
-- **D / Right Arrow**: Steer Right
-- **Space**: Handbrake
-- **R**: Reset Car Position
+- W / Up Arrow: Accelerate
+- S / Down Arrow: Brake/Reverse
+- A / Left Arrow: Turn Left
+- D / Right Arrow: Turn Right
+- R: Reset car position
 
-## Getting Started
+## Development
 
-### Prerequisites
-
-- Node.js installed on your system
-- Modern web browser (Chrome, Firefox, Safari, Edge)
+This project uses [Vite](https://vitejs.dev/) for fast development and building.
 
 ### Installation
 
-1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/trackmania-clone.git
-cd trackmania-clone
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 npm install
 ```
 
-3. Start the development server:
+### Running the development server
+
 ```bash
+# Start development server
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173/`
+### Building for production
 
-## Technical Implementation
+```bash
+# Build for production
+npm run build
+```
 
-This game is built using:
+## Technologies Used
 
-- **Three.js** - For 3D rendering
-- **Cannon.js** - For physics simulation
-- **Vite** - For bundling and development server
-
-The codebase is organized as follows:
-
-- `main.js` - Entry point that sets up the game
-- `car.js` - Car physics and visuals
-- `track.js` - Track generation and obstacles
-- `utils.js` - Helper functions
-
-## Future Improvements
-
-- Add multiple track layouts
-- Implement lap counting and ghost cars
-- Add more vehicle options with different handling characteristics
-- Add sound effects and music
-- Implement a track editor
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Inspired by the original Trackmania series by Nadeo
-- Built with Three.js and Cannon.js 
+- Three.js: JavaScript 3D library
+- Vite: Build tool and development server 

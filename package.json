@@ -1,26 +1,17 @@
 {
-  "name": "trackmania-clone",
+  "name": "threejs-racing-game",
   "version": "1.0.0",
-  "description": "A Trackmania clone built with Three.js",
-  "main": "index.js",
+  "description": "A 3D racing game built with Three.js",
+  "main": "js/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
-  "keywords": [
-    "three.js",
-    "racing",
-    "game",
-    "trackmania"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
-    "three": "^0.157.0",
-    "cannon-es": "^0.20.0"
+    "three": "^0.158.0"
   },
   "devDependencies": {
-    "vite": "^5.0.0"
+    "vite": "^4.5.0"
   }
 } 
