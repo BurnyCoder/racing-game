@@ -495,11 +495,9 @@ class RacingGame {
     }
     
     updateCamera() {
-        // Dynamic camera distance based on speed
-        const speedFactor = Math.min(1 + (Math.abs(this.gameState.speed) / 50), 3);
+        // Position camera behind the car
+        const cameraOffset = new THREE.Vector3(0, 3, -8);
         
-        // Position camera behind the car with distance based on speed
-        const cameraOffset = new THREE.Vector3(0, 3 * speedFactor, -8 * speedFactor);
         cameraOffset.applyQuaternion(this.car.quaternion);
         this.camera.position.copy(this.car.position).add(cameraOffset);
         
