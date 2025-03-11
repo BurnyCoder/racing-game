@@ -23,7 +23,18 @@ class RacingGame {
             brakeForce: 0.4,
             turnSpeed: 0.03,
             time: 0,
-            isPlaying: false
+            isPlaying: false,
+            // Bunnyhopping mechanics
+            isJumping: false,
+            jumpHeight: 0,
+            jumpSpeed: 0,
+            jumpForce: 15,
+            gravity: 30,
+            jumpCooldown: 0,
+            jumpCooldownTime: 0.3,
+            consecutiveJumps: 0,
+            maxConsecutiveJumps: 3,
+            speedBoostPerJump: 3
         };
         
         // Controls state
@@ -31,7 +42,8 @@ class RacingGame {
             forward: false,
             backward: false,
             left: false,
-            right: false
+            right: false,
+            jump: false
         };
         
         // Initialize the game
@@ -67,6 +79,10 @@ class RacingGame {
         
         // Add event listeners
         this.setupEventListeners();
+        
+        // Explicitly start the game
+        this.gameState.isPlaying = true;
+        console.log("Game initialized, isPlaying set to:", this.gameState.isPlaying);
         
         // Start the game loop
         this.gameLoop();
@@ -280,6 +296,8 @@ class RacingGame {
     }
     
     handleKeyDown(event) {
+        if (!this.gameState.isPlaying) return;
+        
         switch(event.key.toLowerCase()) {
             case 'w':
             case 'arrowup':
@@ -296,6 +314,10 @@ class RacingGame {
             case 'd':
             case 'arrowright':
                 this.inputState.right = true;
+                break;
+            case ' ': // Space bar for jumping
+                this.inputState.jump = true;
+                this.tryJump();
                 break;
             case 'r':
                 this.resetCar();
@@ -321,14 +343,44 @@ class RacingGame {
             case 'arrowright':
                 this.inputState.right = false;
                 break;
+            case ' ': // Space bar for jumping
+                this.inputState.jump = false;
+                break;
+        }
+    }
+    
+    tryJump() {
+        // Only jump if on the ground and cooldown is over
+        if (!this.gameState.isJumping && this.gameState.jumpCooldown <= 0) {
+            this.gameState.isJumping = true;
+            this.gameState.jumpSpeed = this.gameState.jumpForce;
+            
+            // Track consecutive jumps for bunnyhopping
+            if (Math.abs(this.gameState.speed) > 5) {
+                this.gameState.consecutiveJumps++;
+                
+                // Apply speed boost for consecutive jumps (bunnyhopping)
+                if (this.gameState.consecutiveJumps > 1 && this.gameState.consecutiveJumps <= this.gameState.maxConsecutiveJumps) {
+                    const speedBoost = this.gameState.speedBoostPerJump * (this.gameState.consecutiveJumps - 1);
+                    const speedDirection = this.gameState.speed > 0 ? 1 : -1;
+                    this.gameState.speed += speedBoost * speedDirection;
+                }
+            }
+            
+            // Apply jump cooldown
+            this.gameState.jumpCooldown = this.gameState.jumpCooldownTime;
         }
     }
     
     resetCar() {
-        // Reset car position and rotation
+        // Reset car position and rotation to the starting position
         this.car.position.set(0, 0, 0);
         this.car.rotation.y = 0;
         this.gameState.speed = 0;
+        this.gameState.isJumping = false;
+        this.gameState.jumpHeight = 0;
+        this.gameState.jumpSpeed = 0;
+        this.gameState.consecutiveJumps = 0;
     }
     
     updateCar(deltaTime) {
@@ -354,6 +406,32 @@ class RacingGame {
         // Clamp speed
         this.gameState.speed = Math.max(-this.gameState.maxSpeed / 2, Math.min(this.gameState.speed, this.gameState.maxSpeed));
         
+        // Update jump cooldown
+        if (this.gameState.jumpCooldown > 0) {
+            this.gameState.jumpCooldown -= deltaTime;
+        }
+        
+        // Handle jumping and gravity
+        if (this.gameState.isJumping) {
+            // Apply jump velocity
+            this.gameState.jumpHeight += this.gameState.jumpSpeed * deltaTime;
+            
+            // Apply gravity to jump speed
+            this.gameState.jumpSpeed -= this.gameState.gravity * deltaTime;
+            
+            // Check if landed
+            if (this.gameState.jumpHeight <= 0) {
+                this.gameState.jumpHeight = 0;
+                this.gameState.jumpSpeed = 0;
+                this.gameState.isJumping = false;
+                
+                // Reset consecutive jumps if jump button isn't held
+                if (!this.inputState.jump) {
+                    this.gameState.consecutiveJumps = 0;
+                }
+            }
+        }
+        
         // Turning (only effective when moving)
         if (Math.abs(this.gameState.speed) > 0.1) {
             const turnMultiplier = this.gameState.speed > 0 ? 1 : -1;
@@ -370,8 +448,11 @@ class RacingGame {
         this.car.position.x += Math.sin(this.car.rotation.y) * moveDistance;
         this.car.position.z += Math.cos(this.car.rotation.y) * moveDistance;
         
-        // Keep car on the ground
-        this.car.position.y = 0;
+        // Apply jump height to car's Y position
+        this.car.position.y = this.gameState.jumpHeight;
+        
+        // Check for track boundaries (simple collision)
+        this.checkTrackBoundaries();
         
         // Update UI
         this.updateUI();
@@ -380,6 +461,12 @@ class RacingGame {
     updateUI() {
         // Update speed display
         document.getElementById('speed').textContent = `Speed: ${Math.abs(Math.round(this.gameState.speed * 3.6))} km/h`;
+        
+        // Add jump information
+        const speedElement = document.getElementById('speed');
+        if (this.gameState.consecutiveJumps > 1) {
+            speedElement.innerHTML += ` <span style="color: #ffcc00;">+${this.gameState.consecutiveJumps - 1} HOPS</span>`;
+        }
         
         // Update time display
         document.getElementById('time').textContent = `Time: ${this.formatTime(this.gameState.time)}`;
@@ -425,6 +512,18 @@ class RacingGame {
         
         // Render the scene
         this.renderer.render(this.scene, this.camera);
+    }
+    
+    // Add the missing checkTrackBoundaries method
+    checkTrackBoundaries() {
+        // Simple track boundary check based on distance from track center
+        const centerDistance = Math.sqrt(this.car.position.x * this.car.position.x + this.car.position.z * this.car.position.z);
+        
+        // We track if the car is on the track, but don't modify speed
+        const isOnTrack = centerDistance <= 110 && centerDistance >= 20;
+        
+        // Update the off-track state for visual or sound effects if needed
+        this.gameState.isOffTrack = !isOnTrack;
     }
 }
 

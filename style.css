@@ -44,4 +44,14 @@ body {
     padding: 10px;
     border-radius: 5px;
     text-align: center;
+}
+
+#controls-info strong {
+    color: #ffcc00;
+}
+
+#controls-info .hint {
+    margin-top: 5px;
+    color: #66ccff;
+    font-size: 14px;
 } 
