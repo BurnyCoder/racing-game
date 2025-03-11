@@ -25,7 +25,8 @@ class RacingGame {
             lap: 1,
             maxLaps: 3,
             time: 0,
-            isPlaying: false
+            isPlaying: false,
+            isOffTrack: false
         };
         
         // Controls state
@@ -425,10 +426,14 @@ class RacingGame {
         // Simple track boundary check based on distance from track center
         const centerDistance = Math.sqrt(this.car.position.x * this.car.position.x + this.car.position.z * this.car.position.z);
         
-        if (centerDistance > 110 || centerDistance < 20) {
-            // Car is out of bounds or in the center - slow it down significantly
-            this.gameState.speed *= 0.9;
-        }
+        // We still track if the car is on the track, but don't modify speed
+        const isOnTrack = centerDistance <= 110 && centerDistance >= 20;
+        
+        // Update the off-track state for visual or sound effects if needed
+        this.gameState.isOffTrack = !isOnTrack;
+        
+        // No speed modifications here - max speed will be enforced uniformly
+        // by the clamping in the updateCar method
     }
     
     checkLap() {
