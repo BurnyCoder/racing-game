@@ -1,4 +1,4 @@
-# Three.js Racing Game
+# Racing Game
 
 A simple 3D racing game built with Three.js.
 
