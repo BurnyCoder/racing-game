@@ -96,13 +96,81 @@ class RacingGame {
     }
     
     createGround() {
-        // Create a simple ground plane
-        const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+        // Create a textured ground plane with grid for better movement feedback
+        const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+        
+        // Create a grid texture
+        const textureSize = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = textureSize;
+        canvas.height = textureSize;
+        const context = canvas.getContext('2d');
+        
+        // Set background color
+        context.fillStyle = '#1e7744';  // Grass green
+        context.fillRect(0, 0, textureSize, textureSize);
+        
+        // Draw grid lines
+        context.strokeStyle = '#2a8c54';  // Slightly lighter green
+        context.lineWidth = 2;
+        
+        // Draw larger grid squares - main grid
+        const gridSize = 64;
+        for (let i = 0; i <= textureSize; i += gridSize) {
+            context.beginPath();
+            context.moveTo(i, 0);
+            context.lineTo(i, textureSize);
+            context.stroke();
+            
+            context.beginPath();
+            context.moveTo(0, i);
+            context.lineTo(textureSize, i);
+            context.stroke();
+        }
+        
+        // Draw smaller grid squares inside - secondary grid
+        context.strokeStyle = '#25804b';  // Even more subtle grid
+        context.lineWidth = 1;
+        const smallGridSize = 16;
+        for (let i = 0; i <= textureSize; i += smallGridSize) {
+            // Skip if this is already covered by the main grid
+            if (i % gridSize === 0) continue;
+            
+            context.beginPath();
+            context.moveTo(i, 0);
+            context.lineTo(i, textureSize);
+            context.stroke();
+            
+            context.beginPath();
+            context.moveTo(0, i);
+            context.lineTo(textureSize, i);
+            context.stroke();
+        }
+        
+        // Create some random darker patches for variety
+        context.fillStyle = '#185e35';  // Darker green
+        for (let i = 0; i < 50; i++) {
+            const size = Math.random() * 50 + 20;
+            const x = Math.random() * (textureSize - size);
+            const y = Math.random() * (textureSize - size);
+            context.beginPath();
+            context.arc(x, y, size, 0, Math.PI * 2);
+            context.fill();
+        }
+        
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(20, 20);  // Repeat the texture many times for a dense grid
+        
+        // Create material with the texture
         const groundMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x1e7744,  // Grass green
+            map: texture,
             roughness: 0.8,
             metalness: 0.2
         });
+        
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
