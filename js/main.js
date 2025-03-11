@@ -17,7 +17,7 @@ class RacingGame {
         // Game state
         this.gameState = {
             speed: 0,
-            maxSpeed: 50,
+            maxSpeed: 500, // Much higher max speed (practically uncapped)
             acceleration: 0.2,
             deceleration: 0.1,
             brakeForce: 0.4,
@@ -33,8 +33,8 @@ class RacingGame {
             jumpCooldown: 0,
             jumpCooldownTime: 0.3,
             consecutiveJumps: 0,
-            maxConsecutiveJumps: 3,
-            speedBoostPerJump: 3
+            maxConsecutiveJumps: 10, // Increased max consecutive jumps
+            speedBoostPerJump: 5 // Increased speed boost per jump
         };
         
         // Controls state
@@ -403,8 +403,10 @@ class RacingGame {
             }
         }
         
-        // Clamp speed
-        this.gameState.speed = Math.max(-this.gameState.maxSpeed / 2, Math.min(this.gameState.speed, this.gameState.maxSpeed));
+        // Only limit reverse speed, forward speed is uncapped
+        if (this.gameState.speed < -this.gameState.maxSpeed / 2) {
+            this.gameState.speed = -this.gameState.maxSpeed / 2;
+        }
         
         // Update jump cooldown
         if (this.gameState.jumpCooldown > 0) {
@@ -459,13 +461,27 @@ class RacingGame {
     }
     
     updateUI() {
-        // Update speed display
-        document.getElementById('speed').textContent = `Speed: ${Math.abs(Math.round(this.gameState.speed * 3.6))} km/h`;
+        // Calculate speed in km/h
+        const speedKmh = Math.abs(Math.round(this.gameState.speed * 3.6));
+        
+        // Update speed display with color coding for extreme speeds
+        const speedElement = document.getElementById('speed');
+        
+        // Base speed text
+        speedElement.textContent = `Speed: ${speedKmh} km/h`;
+        
+        // Add special styling for high speeds
+        if (speedKmh > 300) {
+            speedElement.innerHTML = `Speed: <span style="color: #ff0000; font-weight: bold; text-shadow: 0 0 5px #ff0000;">${speedKmh} km/h</span> 🔥🔥🔥`;
+        } else if (speedKmh > 200) {
+            speedElement.innerHTML = `Speed: <span style="color: #ff8800; font-weight: bold;">${speedKmh} km/h</span> 🔥🔥`;
+        } else if (speedKmh > 150) {
+            speedElement.innerHTML = `Speed: <span style="color: #ffcc00; font-weight: bold;">${speedKmh} km/h</span> 🔥`;
+        }
         
         // Add jump information
-        const speedElement = document.getElementById('speed');
         if (this.gameState.consecutiveJumps > 1) {
-            speedElement.innerHTML += ` <span style="color: #ffcc00;">+${this.gameState.consecutiveJumps - 1} HOPS</span>`;
+            speedElement.innerHTML += ` <span style="color: #00ffff;">+${this.gameState.consecutiveJumps - 1} HOPS</span>`;
         }
         
         // Update time display
@@ -479,8 +495,11 @@ class RacingGame {
     }
     
     updateCamera() {
-        // Position camera behind the car
-        const cameraOffset = new THREE.Vector3(0, 3, -8);
+        // Dynamic camera distance based on speed
+        const speedFactor = Math.min(1 + (Math.abs(this.gameState.speed) / 50), 3);
+        
+        // Position camera behind the car with distance based on speed
+        const cameraOffset = new THREE.Vector3(0, 3 * speedFactor, -8 * speedFactor);
         cameraOffset.applyQuaternion(this.car.quaternion);
         this.camera.position.copy(this.car.position).add(cameraOffset);
         
