@@ -10,7 +10,7 @@ class RacingGame {
         this.camera = null;
         this.renderer = null;
         this.car = null;
-        this.track = null;
+        this.ground = null;
         this.controls = null;
         this.clock = new THREE.Clock();
         
@@ -22,11 +22,8 @@ class RacingGame {
             deceleration: 0.1,
             brakeForce: 0.4,
             turnSpeed: 0.03,
-            lap: 1,
-            maxLaps: 3,
             time: 0,
-            isPlaying: false,
-            isOffTrack: false
+            isPlaying: false
         };
         
         // Controls state
@@ -62,8 +59,8 @@ class RacingGame {
         // Add lights
         this.addLights();
         
-        // Create track
-        this.createTrack();
+        // Create ground
+        this.createGround();
         
         // Create car
         this.createCar();
@@ -98,11 +95,8 @@ class RacingGame {
         this.scene.add(directionalLight);
     }
     
-    createTrack() {
-        // Create a simple race track (oval shape)
-        const trackGroup = new THREE.Group();
-        
-        // Ground
+    createGround() {
+        // Create a simple ground plane
         const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
         const groundMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x1e7744,  // Grass green
@@ -112,109 +106,8 @@ class RacingGame {
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
-        trackGroup.add(ground);
-        
-        // Race track
-        const trackShape = new THREE.Shape();
-        
-        // Outer track boundary
-        trackShape.moveTo(-100, -50);
-        trackShape.lineTo(100, -50);
-        trackShape.absarc(100, 0, 50, Math.PI * 1.5, Math.PI * 0.5, true);
-        trackShape.lineTo(-100, 50);
-        trackShape.absarc(-100, 0, 50, Math.PI * 0.5, Math.PI * 1.5, true);
-        
-        // Inner track boundary (hole)
-        const holeShape = new THREE.Path();
-        holeShape.moveTo(-80, -30);
-        holeShape.lineTo(80, -30);
-        holeShape.absarc(80, 0, 30, Math.PI * 1.5, Math.PI * 0.5, true);
-        holeShape.lineTo(-80, 30);
-        holeShape.absarc(-80, 0, 30, Math.PI * 0.5, Math.PI * 1.5, true);
-        trackShape.holes.push(holeShape);
-        
-        // Create track mesh
-        const trackGeometry = new THREE.ShapeGeometry(trackShape);
-        const trackMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x333333,  // Dark gray asphalt
-            roughness: 0.7,
-            metalness: 0.1
-        });
-        const track = new THREE.Mesh(trackGeometry, trackMaterial);
-        track.rotation.x = -Math.PI / 2;
-        track.position.y = 0.1; // Slightly above ground
-        track.receiveShadow = true;
-        trackGroup.add(track);
-        
-        // Add some track markings
-        this.addTrackMarkings(trackGroup);
-        
-        this.track = trackGroup;
-        this.scene.add(this.track);
-    }
-    
-    addTrackMarkings(trackGroup) {
-        // Starting line
-        const startLineGeometry = new THREE.PlaneGeometry(15, 2);
-        const startLineMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0xffffff,
-            roughness: 0.5,
-            metalness: 0.2
-        });
-        const startLine = new THREE.Mesh(startLineGeometry, startLineMaterial);
-        startLine.rotation.x = -Math.PI / 2;
-        startLine.position.set(-100, 0.2, 0);
-        trackGroup.add(startLine);
-        
-        // Track edge lines (white)
-        const createTrackEdge = (radius, y, segments = 64) => {
-            const points = [];
-            for (let i = 0; i <= segments; i++) {
-                const theta = (i / segments) * Math.PI * 2;
-                points.push(new THREE.Vector3(
-                    Math.cos(theta) * radius,
-                    y,
-                    Math.sin(theta) * radius
-                ));
-            }
-            return points;
-        };
-        
-        // Inner edge
-        const innerPoints = [
-            ...createTrackEdge(30, 0.2).filter(p => p.x > 0 && p.z > -30 && p.z < 30),
-            ...createTrackEdge(30, 0.2).filter(p => p.x < 0 && p.z > -30 && p.z < 30)
-        ];
-        
-        // Add straight sections for inner edge
-        for (let x = -80; x <= 80; x += 2) {
-            innerPoints.push(new THREE.Vector3(x, 0.2, -30));
-            innerPoints.push(new THREE.Vector3(x, 0.2, 30));
-        }
-        
-        // Outer edge
-        const outerPoints = [
-            ...createTrackEdge(50, 0.2).filter(p => p.x > 0 && p.z > -50 && p.z < 50),
-            ...createTrackEdge(50, 0.2).filter(p => p.x < 0 && p.z > -50 && p.z < 50)
-        ];
-        
-        // Add straight sections for outer edge
-        for (let x = -100; x <= 100; x += 2) {
-            outerPoints.push(new THREE.Vector3(x, 0.2, -50));
-            outerPoints.push(new THREE.Vector3(x, 0.2, 50));
-        }
-        
-        // Create edge line materials
-        const edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-        
-        // Create edge lines
-        const innerEdgeGeometry = new THREE.BufferGeometry().setFromPoints(innerPoints);
-        const innerEdge = new THREE.Line(innerEdgeGeometry, edgeMaterial);
-        trackGroup.add(innerEdge);
-        
-        const outerEdgeGeometry = new THREE.BufferGeometry().setFromPoints(outerPoints);
-        const outerEdge = new THREE.Line(outerEdgeGeometry, edgeMaterial);
-        trackGroup.add(outerEdge);
+        this.ground = ground;
+        this.scene.add(this.ground);
     }
     
     createCar() {
@@ -296,9 +189,9 @@ class RacingGame {
         rightHeadlight.position.set(0.6, 0.6, -2);
         carGroup.add(rightHeadlight);
         
-        // Position the car at the starting line
-        carGroup.position.set(-90, 0, 0);
-        carGroup.rotation.y = Math.PI / 2;
+        // Position the car
+        carGroup.position.set(0, 0, 0);
+        carGroup.rotation.y = 0;
         
         this.car = carGroup;
         this.scene.add(this.car);
@@ -365,8 +258,8 @@ class RacingGame {
     
     resetCar() {
         // Reset car position and rotation
-        this.car.position.set(-90, 0, 0);
-        this.car.rotation.y = Math.PI / 2;
+        this.car.position.set(0, 0, 0);
+        this.car.rotation.y = 0;
         this.gameState.speed = 0;
     }
     
@@ -412,63 +305,13 @@ class RacingGame {
         // Keep car on the ground
         this.car.position.y = 0;
         
-        // Check for track boundaries (simple collision)
-        this.checkTrackBoundaries();
-        
-        // Check for lap completion
-        this.checkLap();
-        
         // Update UI
         this.updateUI();
-    }
-    
-    checkTrackBoundaries() {
-        // Simple track boundary check based on distance from track center
-        const centerDistance = Math.sqrt(this.car.position.x * this.car.position.x + this.car.position.z * this.car.position.z);
-        
-        // We still track if the car is on the track, but don't modify speed
-        const isOnTrack = centerDistance <= 110 && centerDistance >= 20;
-        
-        // Update the off-track state for visual or sound effects if needed
-        this.gameState.isOffTrack = !isOnTrack;
-        
-        // No speed modifications here - max speed will be enforced uniformly
-        // by the clamping in the updateCar method
-    }
-    
-    checkLap() {
-        // Check if car crosses the starting line
-        const isNearStartLine = (
-            this.car.position.x < -85 && 
-            this.car.position.x > -95 && 
-            Math.abs(this.car.position.z) < 10 &&
-            this.gameState.speed > 0
-        );
-        
-        // To prevent multiple lap counts, use a simple state machine
-        if (isNearStartLine && !this.crossingStartLine) {
-            this.crossingStartLine = true;
-            this.gameState.lap++;
-            
-            if (this.gameState.lap > this.gameState.maxLaps) {
-                this.gameState.isPlaying = false;
-                alert(`Race finished! Your time: ${this.formatTime(this.gameState.time)}`);
-                this.resetCar();
-                this.gameState.lap = 1;
-                this.gameState.time = 0;
-                this.gameState.isPlaying = true;
-            }
-        } else if (!isNearStartLine && this.crossingStartLine) {
-            this.crossingStartLine = false;
-        }
     }
     
     updateUI() {
         // Update speed display
         document.getElementById('speed').textContent = `Speed: ${Math.abs(Math.round(this.gameState.speed * 3.6))} km/h`;
-        
-        // Update lap display
-        document.getElementById('lap').textContent = `Lap: ${this.gameState.lap}/${this.gameState.maxLaps}`;
         
         // Update time display
         document.getElementById('time').textContent = `Time: ${this.formatTime(this.gameState.time)}`;
