@@ -2,6 +2,8 @@
 
 A simple 3D racing game built with Three.js.
 
+![image](https://github.com/user-attachments/assets/6cea5ec7-b415-440c-9250-0fb182cc1d8c)
+
 ## Features
 
 - 3D car model with basic physics
